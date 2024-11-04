@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 
 namespace testapi.Controllers;
 
@@ -7,7 +8,7 @@ namespace testapi.Controllers;
 
 public class GamesController : ControllerBase
 {
-    private static List<Game> games;
+    private static List<Game> games = new List<Game>();
 
 // demo has this bellow methods  I cant imagine why thoe order would matter though keep it in mind
    public class Game{
@@ -50,19 +51,33 @@ public class GamesController : ControllerBase
     }
 
     [HttpGet]
-    public IEnumerable<Game> Get()
+    public ActionResult<IEnumerable<Game>> Get()
     {
-// write code that causes the API to return the current list of games
+        if (games != null && games.Count > 0)
+        {
+            return Ok(games);  // Return list of games
+        }
+        return NotFound(); 
     }
     
-        [HttpDelete]
-        public IEnumerable<Game> Delete( int id)
-        {
-  // write code that delets the game with the id sent to the API then returns a list of games
+        [HttpDelete("{id}")]
+        public ActionResult<IEnumerable<Game>> Delete(int id) {
+            var game = games.FirstOrDefault(g => g.id == id);
+            if (game != null)
+            {
+                games.Remove(game); // Remove the game if it exists
+                return Ok(games);   // Return updated list of games
+            }
+            return NotFound(); 
         }
-                [HttpPost]
-        public IEnumerable<Game>  AddGame( Game game)
-        {
-// write code that adds the game posted to this route then displays the list of games
+        
+        [HttpPost]
+        public ActionResult<IEnumerable<Game>> AddGame(Game game){
+            if (game != null)
+            {
+                games.Add(game); // Add the new game to the list
+                return CreatedAtAction(nameof(Get), new { id = game.id }, games); // Return 201 with updated games list
+            }
+            return BadRequest();
         }
 }
